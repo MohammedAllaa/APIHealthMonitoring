@@ -1,3 +1,4 @@
+using APIHealthMonitoring.Persistence;
 
 namespace APIHealthMonitoring
 {
@@ -7,16 +8,26 @@ namespace APIHealthMonitoring
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Add services to the container.
+            // -------------------------------------------------------------------------
+            // Service Registration
+            // -------------------------------------------------------------------------
+
+            // Registers AppDbContext (SQL Server) and IUnitOfWork.
+            // All Persistence layer DI configuration lives in PersistenceServiceRegistration.
+            builder.Services.AddPersistenceServices(builder.Configuration);
 
             builder.Services.AddControllers();
+
             // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
             builder.Services.AddEndpointsApiExplorer();
             builder.Services.AddSwaggerGen();
 
+            // -------------------------------------------------------------------------
+            // HTTP Pipeline Configuration
+            // -------------------------------------------------------------------------
+
             var app = builder.Build();
 
-            // Configure the HTTP request pipeline.
             if (app.Environment.IsDevelopment())
             {
                 app.UseSwagger();
@@ -26,7 +37,6 @@ namespace APIHealthMonitoring
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 
