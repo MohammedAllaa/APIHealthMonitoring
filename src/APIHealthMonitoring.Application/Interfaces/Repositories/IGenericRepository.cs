@@ -1,4 +1,5 @@
-﻿using APIHealthMonitoring.Domain.Entities;
+﻿using APIHealthMonitoring.Application.Specifications;
+using APIHealthMonitoring.Domain.Entities;
 
 namespace APIHealthMonitoring.Application.Interfaces.Repositories;
 
@@ -67,4 +68,40 @@ public interface IGenericRepository<T> where T : BaseEntity
     /// <param name="id">The primary key value to check.</param>
     /// <param name="cancellationToken">Token to observe for cancellation.</param>
     Task<bool> ExistsAsync(int id, CancellationToken cancellationToken = default);
+
+    // -------------------------------------------------------------------------
+    // Specification-Based Query Operations
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Returns a single entity that satisfies the given specification,
+    /// or null if no match is found.
+    /// Use this when you expect at most one result (e.g., get by unique field).
+    /// </summary>
+    /// <param name="specification">The specification defining the query rules.</param>
+    /// <param name="cancellationToken">Token to observe for cancellation.</param>
+    Task<T?> GetEntityWithSpecAsync(
+        ISpecification<T> specification,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns all entities that satisfy the given specification.
+    /// Supports filtering, ordering, eager loading, and pagination.
+    /// </summary>
+    /// <param name="specification">The specification defining the query rules.</param>
+    /// <param name="cancellationToken">Token to observe for cancellation.</param>
+    Task<IReadOnlyList<T>> GetAllWithSpecAsync(
+        ISpecification<T> specification,
+        CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Returns the total count of entities that satisfy the given specification.
+    /// Used to calculate total pages for pagination — runs a COUNT query,
+    /// not a full data fetch.
+    /// </summary>
+    /// <param name="specification">The specification defining the filter rules.</param>
+    /// <param name="cancellationToken">Token to observe for cancellation.</param>
+    Task<int> CountAsync(
+        ISpecification<T> specification,
+        CancellationToken cancellationToken = default);
 }
