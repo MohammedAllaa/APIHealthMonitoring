@@ -1,5 +1,6 @@
 using APIHealthMonitoring.Application.DTOs.HealthChecks;
 using APIHealthMonitoring.Application.Interfaces;
+using APIHealthMonitoring.Application.Interfaces.Alerts;
 using APIHealthMonitoring.Application.Interfaces.HealthChecks;
 using APIHealthMonitoring.Application.Specifications;
 using APIHealthMonitoring.Application.Specifications.HealthChecks;
@@ -17,6 +18,7 @@ public class HealthCheckService : IHealthCheckService
     private readonly IUnitOfWork             _unitOfWork;
     private readonly IHealthCheckExecutor    _executor;
     private readonly IHealthStatusEvaluator  _evaluator;
+    private readonly IAlertEvaluator         _alertEvaluator;
 
     // Rate-limit: last manual trigger time per API endpoint
     private static readonly Dictionary<int, DateTime> _lastManualTrigger = new();
@@ -25,11 +27,13 @@ public class HealthCheckService : IHealthCheckService
     public HealthCheckService(
         IUnitOfWork            unitOfWork,
         IHealthCheckExecutor   executor,
-        IHealthStatusEvaluator evaluator)
+        IHealthStatusEvaluator evaluator,
+        IAlertEvaluator        alertEvaluator)
     {
-        _unitOfWork  = unitOfWork;
-        _executor    = executor;
-        _evaluator   = evaluator;
+        _unitOfWork      = unitOfWork;
+        _executor        = executor;
+        _evaluator       = evaluator;
+        _alertEvaluator  = alertEvaluator;
     }
 
     // -------------------------------------------------------------------------
@@ -67,6 +71,9 @@ public class HealthCheckService : IHealthCheckService
         _unitOfWork.Repository<ApiEndpoint>().Update(endpoint);
 
         await _unitOfWork.SaveChangesAsync(ct);
+
+        // 6. Trigger alert evaluation (Module 5)
+        await _alertEvaluator.EvaluateAndAlertAsync(endpoint, result, config, ct);
     }
 
     // -------------------------------------------------------------------------
