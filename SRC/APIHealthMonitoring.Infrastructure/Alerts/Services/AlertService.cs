@@ -119,8 +119,8 @@ public class AlertService : IAlertService
             throw new InvalidOperationException("FromDate cannot be after ToDate.");
         }
 
-        var dataSpec  = new AlertsByApiPaginatedSpec(request);
-        var countSpec = new AlertsCountSpec(request);
+        var dataSpec  = new AlertSearchSpec(request);
+        var countSpec = new AlertSearchCountSpec(request);
 
         var alerts = await _unitOfWork.Repository<Alert>().GetAllWithSpecAsync(dataSpec, ct);
         var total  = await _unitOfWork.Repository<Alert>().CountAsync(countSpec, ct);

@@ -75,8 +75,8 @@ public class ApiEndpointService : IApiEndpointService
     public async Task<PaginatedResult<ApiEndpointSummaryDto>> GetPagedAsync(
         ApiEndpointPagedRequestDto request, CancellationToken ct = default)
     {
-        var dataSpec  = new ApiEndpointsPaginatedSpec(request);
-        var countSpec = new ApiEndpointsCountSpec(request);
+        var dataSpec  = new ApiEndpointSearchSpec(request);
+        var countSpec = new ApiEndpointSearchCountSpec(request);
 
         var data       = await _endpointRepo.GetAllWithSpecAsync(dataSpec, ct);
         var totalCount = await _endpointRepo.CountAsync(countSpec, ct);
@@ -202,8 +202,8 @@ public class ApiEndpointService : IApiEndpointService
         IsActive           = e.IsActive,
         CreatedAt          = e.CreatedAt,
         UpdatedAt          = e.UpdatedAt,
-        CurrentStatus      = "Unknown",   // Populated by Module 4
-        LastCheckedAt      = null,        // Populated by Module 4
+        CurrentStatus      = e.CurrentStatus.ToString(),
+        LastCheckedAt      = e.LastCheckedAt,
     };
 
     private static ApiEndpointSummaryDto MapToSummary(ApiEndpoint e) => new()
@@ -213,6 +213,7 @@ public class ApiEndpointService : IApiEndpointService
         Environment   = e.Environment,
         IsActive      = e.IsActive,
         ServiceOwner  = e.ServiceOwner,
-        CurrentStatus = "Unknown",        // Populated by Module 4
+        CurrentStatus = e.CurrentStatus.ToString(),
     };
+
 }

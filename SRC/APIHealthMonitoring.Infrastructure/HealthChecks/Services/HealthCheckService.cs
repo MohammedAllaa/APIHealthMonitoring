@@ -91,8 +91,8 @@ public class HealthCheckService : IHealthCheckService
             throw new InvalidOperationException("FromDate cannot be after ToDate.");
         }
 
-        var dataSpec  = new HealthChecksByApiSpec(request);
-        var countSpec = new HealthChecksCountByApiSpec(request);
+        var dataSpec  = new HealthCheckSearchSpec(request);
+        var countSpec = new HealthCheckSearchCountSpec(request);
 
         var data  = await _unitOfWork.Repository<HealthCheck>().GetAllWithSpecAsync(dataSpec, ct);
         var total = await _unitOfWork.Repository<HealthCheck>().CountAsync(countSpec, ct);
