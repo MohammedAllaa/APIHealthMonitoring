@@ -1,4 +1,5 @@
 using APIHealthMonitoring.Infrastructure;
+using APIHealthMonitoring.Infrastructure.HealthChecks.BackgroundServices;
 using APIHealthMonitoring.Persistence;
 using APIHealthMonitoring.Persistence.Data;
 using Microsoft.OpenApi.Models;
@@ -21,6 +22,12 @@ namespace APIHealthMonitoring
             // Registers ASP.NET Core Identity, JWT Bearer authentication,
             // and all auth/user-management services.
             builder.Services.AddIdentityServices(builder.Configuration);
+
+            // IHttpClientFactory — used by HealthCheckExecutor to issue HTTP probes
+            builder.Services.AddHttpClient();
+
+            // Module 4 — Background monitoring engine
+            builder.Services.AddHostedService<MonitoringBackgroundService>();
 
             builder.Services.AddControllers();
 

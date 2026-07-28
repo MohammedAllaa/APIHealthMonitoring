@@ -1,7 +1,9 @@
 using System.Text;
 using APIHealthMonitoring.Application.Interfaces.Auth;
 using APIHealthMonitoring.Application.Interfaces.Endpoints;
+using APIHealthMonitoring.Application.Interfaces.HealthChecks;
 using APIHealthMonitoring.Infrastructure.Endpoints.Services;
+using APIHealthMonitoring.Infrastructure.HealthChecks.Services;
 using APIHealthMonitoring.Domain.Entities;
 using APIHealthMonitoring.Infrastructure.Identity.Services;
 using APIHealthMonitoring.Infrastructure.Identity.Settings;
@@ -116,6 +118,11 @@ public static class IdentityServiceRegistration
 
         // Module 3 — Monitoring Configuration
         services.AddScoped<IMonitoringConfigService, MonitoringConfigService>();
+
+        // Module 4 — Health Check Engine
+        services.AddScoped<IHealthCheckExecutor,   HealthCheckExecutor>();
+        services.AddScoped<IHealthStatusEvaluator, HealthStatusEvaluator>();
+        services.AddScoped<IHealthCheckService,    HealthCheckService>();
 
         return services;
     }
