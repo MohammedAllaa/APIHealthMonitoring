@@ -4,6 +4,7 @@ using APIHealthMonitoring.Persistence.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace APIHealthMonitoring.Persistence.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260728125720_AddIdentityAndSecurityModule")]
+    partial class AddIdentityAndSecurityModule
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -21,102 +24,6 @@ namespace APIHealthMonitoring.Persistence.Migrations
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
-
-            modelBuilder.Entity("APIHealthMonitoring.Domain.Entities.Alert", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ApiEndpointId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApiEndpointId");
-
-                    b.ToTable("Alerts");
-                });
-
-            modelBuilder.Entity("APIHealthMonitoring.Domain.Entities.ApiEndpoint", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("BaseUrl")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<int>("Environment")
-                        .HasColumnType("int");
-
-                    b.Property<int>("ExpectedStatusCode")
-                        .HasColumnType("int");
-
-                    b.Property<string>("HealthEndpoint")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("nvarchar(500)");
-
-                    b.Property<int>("HttpMethod")
-                        .HasColumnType("int");
-
-                    b.Property<int>("IntervalSeconds")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsActive")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(true);
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<string>("ServiceOwner")
-                        .IsRequired()
-                        .HasMaxLength(200)
-                        .HasColumnType("nvarchar(200)");
-
-                    b.Property<int>("TimeoutSeconds")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("Environment")
-                        .HasDatabaseName("IX_ApiEndpoints_Environment");
-
-                    b.HasIndex("IsActive")
-                        .HasDatabaseName("IX_ApiEndpoints_IsActive");
-
-                    b.HasIndex("Name")
-                        .IsUnique()
-                        .HasDatabaseName("IX_ApiEndpoints_Name_Unique");
-
-                    b.HasIndex("ServiceOwner")
-                        .HasDatabaseName("IX_ApiEndpoints_ServiceOwner");
-
-                    b.ToTable("ApiEndpoints", (string)null);
-                });
 
             modelBuilder.Entity("APIHealthMonitoring.Domain.Entities.ApplicationRole", b =>
                 {
@@ -234,55 +141,6 @@ namespace APIHealthMonitoring.Persistence.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("APIHealthMonitoring.Domain.Entities.HealthCheck", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ApiEndpointId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApiEndpointId");
-
-                    b.ToTable("HealthChecks");
-                });
-
-            modelBuilder.Entity("APIHealthMonitoring.Domain.Entities.MonitoringConfiguration", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<int>("ApiEndpointId")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ApiEndpointId")
-                        .IsUnique();
-
-                    b.ToTable("MonitoringConfigurations");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.Property<int>("Id")
@@ -389,39 +247,6 @@ namespace APIHealthMonitoring.Persistence.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
-            modelBuilder.Entity("APIHealthMonitoring.Domain.Entities.Alert", b =>
-                {
-                    b.HasOne("APIHealthMonitoring.Domain.Entities.ApiEndpoint", "ApiEndpoint")
-                        .WithMany("Alerts")
-                        .HasForeignKey("ApiEndpointId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ApiEndpoint");
-                });
-
-            modelBuilder.Entity("APIHealthMonitoring.Domain.Entities.HealthCheck", b =>
-                {
-                    b.HasOne("APIHealthMonitoring.Domain.Entities.ApiEndpoint", "ApiEndpoint")
-                        .WithMany("HealthChecks")
-                        .HasForeignKey("ApiEndpointId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ApiEndpoint");
-                });
-
-            modelBuilder.Entity("APIHealthMonitoring.Domain.Entities.MonitoringConfiguration", b =>
-                {
-                    b.HasOne("APIHealthMonitoring.Domain.Entities.ApiEndpoint", "ApiEndpoint")
-                        .WithOne("MonitoringConfig")
-                        .HasForeignKey("APIHealthMonitoring.Domain.Entities.MonitoringConfiguration", "ApiEndpointId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("ApiEndpoint");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("APIHealthMonitoring.Domain.Entities.ApplicationRole", null)
@@ -471,15 +296,6 @@ namespace APIHealthMonitoring.Persistence.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-                });
-
-            modelBuilder.Entity("APIHealthMonitoring.Domain.Entities.ApiEndpoint", b =>
-                {
-                    b.Navigation("Alerts");
-
-                    b.Navigation("HealthChecks");
-
-                    b.Navigation("MonitoringConfig");
                 });
 #pragma warning restore 612, 618
         }

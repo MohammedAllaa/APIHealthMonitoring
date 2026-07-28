@@ -1,14 +1,16 @@
-﻿using APIHealthMonitoring.Domain.Entities;
+using APIHealthMonitoring.Domain.Entities;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace APIHealthMonitoring.Persistence.Data;
 
 /// <summary>
 /// The primary Entity Framework Core database context for the application.
-/// Acts as the single unit of work and repository factory provided by EF Core.
-/// All database access flows through this class.
+/// Extends <see cref="IdentityDbContext{TUser, TRole, TKey}"/> to merge the
+/// ASP.NET Core Identity schema (AspNetUsers, AspNetRoles, etc.) into the same
+/// database as the rest of the application — a single migration surface.
 /// </summary>
-public class AppDbContext : DbContext
+public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, string>
 {
     // -------------------------------------------------------------------------
     // Constructor
@@ -29,9 +31,14 @@ public class AppDbContext : DbContext
     // DbSets — each one maps to a database table
     // -------------------------------------------------------------------------
 
-    // TODO: Add your DbSet<YourEntity> properties here as entities are created.
-    // Example:
-    //   public DbSet<MonitoredApi> MonitoredApis => Set<MonitoredApi>();
+    // Identity tables (AspNetUsers, AspNetRoles, etc.) are exposed through the
+    // base IdentityDbContext — no need to redeclare them here.
+
+    // Module 2 — API Endpoint Registry
+    public DbSet<ApiEndpoint>            ApiEndpoints            => Set<ApiEndpoint>();
+    public DbSet<MonitoringConfiguration> MonitoringConfigurations => Set<MonitoringConfiguration>();
+    public DbSet<HealthCheck>            HealthChecks            => Set<HealthCheck>();
+    public DbSet<Alert>                  Alerts                  => Set<Alert>();
 
     // -------------------------------------------------------------------------
     // Model Configuration
@@ -39,17 +46,18 @@ public class AppDbContext : DbContext
 
     /// <summary>
     /// Configures entity mappings, relationships, constraints, and indexes.
-    /// Scans the assembly for all IEntityTypeConfiguration implementations
-    /// and applies them automatically — no manual registration needed.
+    /// Identity base schema is applied first via base.OnModelCreating,
+    /// then application-specific configurations are applied from the assembly.
     /// </summary>
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        // IMPORTANT: call base first so Identity creates its table structure
+        // before any application-level IEntityTypeConfiguration is applied.
+        base.OnModelCreating(modelBuilder);
+
         // Automatically discovers and applies all classes that implement
         // IEntityTypeConfiguration<T> in this assembly.
-        // This keeps AppDbContext clean — each entity owns its own configuration.
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(AppDbContext).Assembly);
-
-        base.OnModelCreating(modelBuilder);
     }
 
     // -------------------------------------------------------------------------
@@ -87,4 +95,4 @@ public class AppDbContext : DbContext
 
         return base.SaveChangesAsync(cancellationToken);
     }
-}
+}

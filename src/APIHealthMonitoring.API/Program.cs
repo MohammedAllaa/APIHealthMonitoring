@@ -1,10 +1,13 @@
+using APIHealthMonitoring.Infrastructure;
 using APIHealthMonitoring.Persistence;
+using APIHealthMonitoring.Persistence.Data;
+using Microsoft.OpenApi.Models;
 
 namespace APIHealthMonitoring
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -12,21 +15,63 @@ namespace APIHealthMonitoring
             // Service Registration
             // -------------------------------------------------------------------------
 
-            // Registers AppDbContext (SQL Server) and IUnitOfWork.
-            // All Persistence layer DI configuration lives in PersistenceServiceRegistration.
+            // Registers AppDbContext (SQL Server, IdentityDbContext) and IUnitOfWork.
             builder.Services.AddPersistenceServices(builder.Configuration);
+
+            // Registers ASP.NET Core Identity, JWT Bearer authentication,
+            // and all auth/user-management services.
+            builder.Services.AddIdentityServices(builder.Configuration);
 
             builder.Services.AddControllers();
 
-            // Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+            // -------------------------------------------------------------------------
+            // Swagger / OpenAPI — with JWT Bearer security definition
+            // -------------------------------------------------------------------------
+
             builder.Services.AddEndpointsApiExplorer();
-            builder.Services.AddSwaggerGen();
+            builder.Services.AddSwaggerGen(options =>
+            {
+                options.SwaggerDoc("v1", new OpenApiInfo
+                {
+                    Title   = "API Health Monitoring",
+                    Version = "v1",
+                    Description = "API Health Monitoring System — Security & Identity Module"
+                });
+
+                // Add the JWT Bearer security scheme so Swagger UI includes an
+                // "Authorize" button for sending tokens with requests.
+                var securityScheme = new OpenApiSecurityScheme
+                {
+                    Name         = "Authorization",
+                    Description  = "Enter: Bearer {your JWT token}",
+                    In           = ParameterLocation.Header,
+                    Type         = SecuritySchemeType.ApiKey,
+                    Scheme       = "Bearer",
+                    BearerFormat = "JWT",
+                    Reference = new OpenApiReference
+                    {
+                        Id   = "Bearer",
+                        Type = ReferenceType.SecurityScheme,
+                    }
+                };
+
+                options.AddSecurityDefinition("Bearer", securityScheme);
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    { securityScheme, Array.Empty<string>() }
+                });
+            });
 
             // -------------------------------------------------------------------------
             // HTTP Pipeline Configuration
             // -------------------------------------------------------------------------
 
             var app = builder.Build();
+
+            // -------------------------------------------------------------------------
+            // Database Seeding — roles + default admin (idempotent)
+            // -------------------------------------------------------------------------
+            await DatabaseSeeder.SeedAsync(app.Services);
 
             if (app.Environment.IsDevelopment())
             {
@@ -36,6 +81,8 @@ namespace APIHealthMonitoring
 
             app.UseHttpsRedirection();
 
+            // Authentication MUST come before Authorization
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
