@@ -58,6 +58,25 @@ public class ApiEndpoint : BaseEntity
     public bool IsActive { get; set; } = true;
 
     // -------------------------------------------------------------------------
+    // Cached Health Status — refreshed after each health check (Module 4)
+    // -------------------------------------------------------------------------
+
+    /// <summary>
+    /// Latest computed health status. Cached for dashboard performance.
+    /// Recalculated after every health check execution.
+    /// </summary>
+    public Enums.ApiHealthStatus CurrentStatus { get; set; } = Enums.ApiHealthStatus.Unknown;
+
+    /// <summary>UTC timestamp of the most recent health check execution. Null before first check.</summary>
+    public DateTime? LastCheckedAt { get; set; }
+
+    /// <summary>
+    /// Running count of consecutive failures. Reset to 0 on first success.
+    /// Used by the status evaluator to determine Critical state.
+    /// </summary>
+    public int ConsecutiveFailures { get; set; }
+
+    // -------------------------------------------------------------------------
     // Navigation Properties — populated by future modules
     // -------------------------------------------------------------------------
 
