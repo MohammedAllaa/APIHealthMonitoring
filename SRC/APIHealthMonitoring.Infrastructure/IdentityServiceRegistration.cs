@@ -114,6 +114,9 @@ public static class IdentityServiceRegistration
         // Module 2 — API Endpoint Registry
         services.AddScoped<IApiEndpointService, ApiEndpointService>();
 
+        // Module 3 — Monitoring Configuration
+        services.AddScoped<IMonitoringConfigService, MonitoringConfigService>();
+
         return services;
     }
 }

@@ -52,6 +52,13 @@ public class ApiEndpointService : IApiEndpointService
             ServiceOwner       = request.ServiceOwner,
             Environment        = request.Environment,
             IsActive           = true,
+            MonitoringConfig   = new MonitoringConfiguration
+            {
+                SlowThresholdMs       = 1000,
+                CriticalThresholdMs   = 2000,
+                FailureCountLimit     = 3,
+                AvailabilityThreshold = 99.0m
+            }
         };
 
         _unitOfWork.Repository<ApiEndpoint>().Add(endpoint);
