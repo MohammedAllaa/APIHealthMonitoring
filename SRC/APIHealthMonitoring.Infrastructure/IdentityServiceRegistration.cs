@@ -1,7 +1,9 @@
 using System.Text;
+using APIHealthMonitoring.Application.Interfaces.Alerts;
 using APIHealthMonitoring.Application.Interfaces.Auth;
 using APIHealthMonitoring.Application.Interfaces.Endpoints;
 using APIHealthMonitoring.Application.Interfaces.HealthChecks;
+using APIHealthMonitoring.Infrastructure.Alerts.Services;
 using APIHealthMonitoring.Infrastructure.Endpoints.Services;
 using APIHealthMonitoring.Infrastructure.HealthChecks.Services;
 using APIHealthMonitoring.Domain.Entities;
@@ -123,6 +125,10 @@ public static class IdentityServiceRegistration
         services.AddScoped<IHealthCheckExecutor,   HealthCheckExecutor>();
         services.AddScoped<IHealthStatusEvaluator, HealthStatusEvaluator>();
         services.AddScoped<IHealthCheckService,    HealthCheckService>();
+
+        // Module 5 — Alert Management
+        services.AddScoped<IAlertService,   AlertService>();
+        services.AddScoped<IAlertEvaluator, AlertEvaluator>();
 
         return services;
     }
