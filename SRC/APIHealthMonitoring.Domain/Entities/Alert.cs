@@ -11,4 +11,5 @@ public class Alert : BaseEntity
 
     /// <summary>Navigation back to the parent endpoint.</summary>
     public ApiEndpoint? ApiEndpoint { get; set; }
+    public string? Name { get; set; }
 }
