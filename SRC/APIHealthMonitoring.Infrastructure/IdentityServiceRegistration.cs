@@ -1,11 +1,15 @@
 using System.Text;
 using APIHealthMonitoring.Application.Interfaces.Alerts;
 using APIHealthMonitoring.Application.Interfaces.Auth;
+using APIHealthMonitoring.Application.Interfaces.Dashboard;
 using APIHealthMonitoring.Application.Interfaces.Endpoints;
 using APIHealthMonitoring.Application.Interfaces.HealthChecks;
+using APIHealthMonitoring.Application.Interfaces.Reporting;
 using APIHealthMonitoring.Infrastructure.Alerts.Services;
+using APIHealthMonitoring.Infrastructure.Dashboard.Services;
 using APIHealthMonitoring.Infrastructure.Endpoints.Services;
 using APIHealthMonitoring.Infrastructure.HealthChecks.Services;
+using APIHealthMonitoring.Infrastructure.Reporting.Services;
 using APIHealthMonitoring.Domain.Entities;
 using APIHealthMonitoring.Infrastructure.Identity.Services;
 using APIHealthMonitoring.Infrastructure.Identity.Settings;
@@ -129,6 +133,11 @@ public static class IdentityServiceRegistration
         // Module 5 — Alert Management
         services.AddScoped<IAlertService,   AlertService>();
         services.AddScoped<IAlertEvaluator, AlertEvaluator>();
+
+        // Module 6 — Dashboard & Reporting
+        services.AddScoped<IAvailabilityCalculator, AvailabilityCalculator>();
+        services.AddScoped<IDashboardService,       DashboardService>();
+        services.AddScoped<IReportingService,       ReportingService>();
 
         return services;
     }
