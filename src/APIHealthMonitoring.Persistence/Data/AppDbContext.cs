@@ -34,9 +34,11 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, ApplicationRole, 
     // Identity tables (AspNetUsers, AspNetRoles, etc.) are exposed through the
     // base IdentityDbContext — no need to redeclare them here.
 
-    // TODO: Add your DbSet<YourEntity> properties here as entities are created.
-    // Example:
-    //   public DbSet<MonitoredApi> MonitoredApis => Set<MonitoredApi>();
+    // Module 2 — API Endpoint Registry
+    public DbSet<ApiEndpoint>            ApiEndpoints            => Set<ApiEndpoint>();
+    public DbSet<MonitoringConfiguration> MonitoringConfigurations => Set<MonitoringConfiguration>();
+    public DbSet<HealthCheck>            HealthChecks            => Set<HealthCheck>();
+    public DbSet<Alert>                  Alerts                  => Set<Alert>();
 
     // -------------------------------------------------------------------------
     // Model Configuration

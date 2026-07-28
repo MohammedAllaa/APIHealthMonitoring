@@ -1,5 +1,7 @@
 using System.Text;
 using APIHealthMonitoring.Application.Interfaces.Auth;
+using APIHealthMonitoring.Application.Interfaces.Endpoints;
+using APIHealthMonitoring.Infrastructure.Endpoints.Services;
 using APIHealthMonitoring.Domain.Entities;
 using APIHealthMonitoring.Infrastructure.Identity.Services;
 using APIHealthMonitoring.Infrastructure.Identity.Settings;
@@ -108,6 +110,9 @@ public static class IdentityServiceRegistration
         services.AddScoped<ITokenService,          TokenService>();
         services.AddScoped<IAuthService,           AuthService>();
         services.AddScoped<IUserManagementService, UserManagementService>();
+
+        // Module 2 — API Endpoint Registry
+        services.AddScoped<IApiEndpointService, ApiEndpointService>();
 
         return services;
     }

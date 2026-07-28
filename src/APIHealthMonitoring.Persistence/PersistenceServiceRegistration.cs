@@ -1,5 +1,7 @@
-﻿using APIHealthMonitoring.Application.Interfaces;
+using APIHealthMonitoring.Application.Interfaces;
+using APIHealthMonitoring.Application.Interfaces.Repositories;
 using APIHealthMonitoring.Persistence.Data;
+using APIHealthMonitoring.Persistence.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -58,6 +60,12 @@ public static class PersistenceServiceRegistration
         // This ensures that all repositories within a single request
         // share the same DbContext instance and transaction boundary.
         services.AddScoped<IUnitOfWork, UnitOfWork.UnitOfWork>();
+
+        // -------------------------------------------------------------------------
+        // Custom Repositories
+        // -------------------------------------------------------------------------
+
+        services.AddScoped<IApiEndpointRepository, ApiEndpointRepository>();
 
         return services;
     }
