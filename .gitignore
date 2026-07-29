@@ -482,3 +482,4 @@ $RECYCLE.BIN/
 
 # Vim temporary swap files
 *.swp
+/SRC/APIHealthMonitoring.API/APIHealthMonitoring.API.csproj
