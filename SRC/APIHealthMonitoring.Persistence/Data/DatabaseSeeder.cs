@@ -1,6 +1,7 @@
 using APIHealthMonitoring.Domain.Entities;
 using APIHealthMonitoring.Domain.Enums;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System.Text.Json;
@@ -21,6 +22,10 @@ public static class DatabaseSeeder
         var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
         var dbContext   = scope.ServiceProvider.GetRequiredService<AppDbContext>();
         var logger      = scope.ServiceProvider.GetRequiredService<ILogger<ApplicationUser>>();
+
+        // Apply migrations automatically before seeding
+        logger.LogInformation("Applying database migrations...");
+        await dbContext.Database.MigrateAsync();
 
         // -------------------------------------------------------------------------
         // 1. Seed Roles
