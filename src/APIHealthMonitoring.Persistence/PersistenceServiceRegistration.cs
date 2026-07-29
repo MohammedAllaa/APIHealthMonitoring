@@ -40,10 +40,11 @@ public static class PersistenceServiceRegistration
 
         services.AddDbContext<AppDbContext>(options =>
         {
-            _ = bool.TryParse(configuration["DatabaseSettings:UseRemoteDatabase"], out var useRemote);
-            var connectionString = useRemote
-                ? configuration.GetConnectionString("RemoteConnection")
-                : configuration.GetConnectionString("DefaultConnection");
+            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
+            var connectionStringName = (env == "Development" || string.IsNullOrEmpty(env))
+                ? "DefaultConnection"
+                : "RemoteConnection";
+            var connectionString = configuration.GetConnectionString(connectionStringName);
 
             options.UseSqlServer(
                 connectionString,
