@@ -1,3 +1,4 @@
+using APIHealthMonitoring.Application.Constants;
 using APIHealthMonitoring.Application.DTOs.Endpoints;
 using APIHealthMonitoring.Application.Interfaces;
 using APIHealthMonitoring.Application.Interfaces.Endpoints;
@@ -18,13 +19,16 @@ public class ApiEndpointService : IApiEndpointService
 {
     private readonly IApiEndpointRepository _endpointRepo;
     private readonly IUnitOfWork            _unitOfWork;
+    private readonly ICacheService          _cache;
 
     public ApiEndpointService(
         IApiEndpointRepository endpointRepo,
-        IUnitOfWork            unitOfWork)
+        IUnitOfWork            unitOfWork,
+        ICacheService          cache)
     {
         _endpointRepo = endpointRepo;
         _unitOfWork   = unitOfWork;
+        _cache        = cache;
     }
 
     // -------------------------------------------------------------------------
@@ -63,6 +67,9 @@ public class ApiEndpointService : IApiEndpointService
 
         _unitOfWork.Repository<ApiEndpoint>().Add(endpoint);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        // Module 10 — new endpoint affects dashboard & active lists
+        InvalidateDashboardCache();
 
         return MapToResponse(endpoint);
     }
@@ -140,6 +147,9 @@ public class ApiEndpointService : IApiEndpointService
         _unitOfWork.Repository<ApiEndpoint>().Update(endpoint);
         await _unitOfWork.SaveChangesAsync(ct);
 
+        // Module 10 — updated endpoint may change cards & summary
+        InvalidateDashboardCache();
+
         return MapToResponse(endpoint);
     }
 
@@ -155,6 +165,9 @@ public class ApiEndpointService : IApiEndpointService
 
         _unitOfWork.Repository<ApiEndpoint>().Delete(endpoint);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        // Module 10 — deleted endpoint affects dashboard & active lists
+        InvalidateDashboardCache();
     }
 
     // -------------------------------------------------------------------------
@@ -170,6 +183,9 @@ public class ApiEndpointService : IApiEndpointService
         endpoint.IsActive = true;
         _unitOfWork.Repository<ApiEndpoint>().Update(endpoint);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        // Module 10
+        InvalidateDashboardCache();
     }
 
     /// <inheritdoc />
@@ -181,6 +197,20 @@ public class ApiEndpointService : IApiEndpointService
         endpoint.IsActive = false;
         _unitOfWork.Repository<ApiEndpoint>().Update(endpoint);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        // Module 10
+        InvalidateDashboardCache();
+    }
+
+    // -------------------------------------------------------------------------
+    // Cache Invalidation Helper
+    // -------------------------------------------------------------------------
+
+    private void InvalidateDashboardCache()
+    {
+        _cache.Remove(CacheKeys.DashboardSummary);
+        _cache.RemoveByPrefix(CacheKeys.DashboardApiCards);
+        _cache.Remove(CacheKeys.ActiveEndpoints);
     }
 
     // -------------------------------------------------------------------------

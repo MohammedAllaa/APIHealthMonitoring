@@ -1,11 +1,14 @@
 using System.Text;
+using APIHealthMonitoring.Application.Interfaces;
 using APIHealthMonitoring.Application.Interfaces.Alerts;
 using APIHealthMonitoring.Application.Interfaces.Auth;
 using APIHealthMonitoring.Application.Interfaces.Dashboard;
 using APIHealthMonitoring.Application.Interfaces.Endpoints;
 using APIHealthMonitoring.Application.Interfaces.HealthChecks;
 using APIHealthMonitoring.Application.Interfaces.Reporting;
+using APIHealthMonitoring.Application.Settings;
 using APIHealthMonitoring.Infrastructure.Alerts.Services;
+using APIHealthMonitoring.Infrastructure.Caching;
 using APIHealthMonitoring.Infrastructure.Dashboard.Services;
 using APIHealthMonitoring.Infrastructure.Endpoints.Services;
 using APIHealthMonitoring.Infrastructure.HealthChecks.Services;
@@ -46,6 +49,22 @@ public static class IdentityServiceRegistration
 
         services.Configure<JwtSettings>(
             configuration.GetSection(JwtSettings.SectionName));
+
+        // -------------------------------------------------------------------------
+        // Module 10 — In-Memory Caching
+        // -------------------------------------------------------------------------
+
+        services.Configure<CacheSettings>(
+            configuration.GetSection(CacheSettings.SectionName));
+
+        var cacheSettings = configuration
+            .GetSection(CacheSettings.SectionName)
+            .Get<CacheSettings>() ?? new CacheSettings();
+
+        services.AddMemoryCache(options =>
+            options.SizeLimit = cacheSettings.SizeLimit);
+
+        services.AddSingleton<ICacheService, CacheService>();
 
         // -------------------------------------------------------------------------
         // ASP.NET Core Identity
