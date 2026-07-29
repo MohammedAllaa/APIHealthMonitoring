@@ -6,6 +6,7 @@ using APIHealthMonitoring.Application.Specifications;
 using APIHealthMonitoring.Application.Specifications.Alerts;
 using APIHealthMonitoring.Domain.Entities;
 using APIHealthMonitoring.Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace APIHealthMonitoring.Infrastructure.Alerts.Services;
 
@@ -16,11 +17,16 @@ public class AlertService : IAlertService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly ICacheService _cache;
+    private readonly ILogger<AlertService> _logger;
 
-    public AlertService(IUnitOfWork unitOfWork, ICacheService cache)
+    public AlertService(
+        IUnitOfWork unitOfWork,
+        ICacheService cache,
+        ILogger<AlertService> logger)
     {
         _unitOfWork = unitOfWork;
         _cache      = cache;
+        _logger     = logger;
     }
 
     // -------------------------------------------------------------------------
@@ -38,7 +44,12 @@ public class AlertService : IAlertService
         var dupSpec    = new OpenAlertsByApiSpec(apiEndpointId, severity);
         var existingAlert = await _unitOfWork.Repository<Alert>().GetEntityWithSpecAsync(dupSpec, ct);
         if (existingAlert is not null)
+        {
+            _logger.LogInformation(
+                "Duplicate open alert ignored for ApiEndpointId {ApiEndpointId} with Severity {Severity}",
+                apiEndpointId, severity);
             return;
+        }
 
         var alert = new Alert
         {
@@ -51,6 +62,10 @@ public class AlertService : IAlertService
 
         _unitOfWork.Repository<Alert>().Add(alert);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        _logger.LogWarning(
+            "Alert created for ApiEndpointId {ApiEndpointId}: {Message} (Severity: {Severity})",
+            apiEndpointId, message, severity);
 
         // Module 10 — alert count changed; invalidate summary
         _cache.Remove(CacheKeys.DashboardSummary);
@@ -77,6 +92,10 @@ public class AlertService : IAlertService
         }
 
         await _unitOfWork.SaveChangesAsync(ct);
+
+        _logger.LogInformation(
+            "Auto-resolved {AlertCount} open alert(s) for ApiEndpointId {ApiEndpointId}",
+            openAlerts.Count, apiEndpointId);
 
         // Module 10 — alert count changed; invalidate summary
         _cache.Remove(CacheKeys.DashboardSummary);
@@ -106,6 +125,8 @@ public class AlertService : IAlertService
 
         _unitOfWork.Repository<Alert>().Update(alert);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        _logger.LogInformation("AlertId {AlertId} manually resolved", alertId);
 
         // Module 10 — alert resolved; invalidate summary
         _cache.Remove(CacheKeys.DashboardSummary);
