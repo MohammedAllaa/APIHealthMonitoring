@@ -40,8 +40,13 @@ public static class PersistenceServiceRegistration
 
         services.AddDbContext<AppDbContext>(options =>
         {
+            _ = bool.TryParse(configuration["DatabaseSettings:UseRemoteDatabase"], out var useRemote);
+            var connectionString = useRemote
+                ? configuration.GetConnectionString("RemoteConnection")
+                : configuration.GetConnectionString("LocalConnection");
+
             options.UseSqlServer(
-                configuration.GetConnectionString("DefaultConnection"),
+                connectionString,
                 sqlServerOptions =>
                 {
                     // Tells EF Core which assembly contains the migration files.
