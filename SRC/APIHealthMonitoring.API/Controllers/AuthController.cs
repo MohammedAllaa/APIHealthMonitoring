@@ -28,7 +28,7 @@ public class AuthController : ControllerBase
 
     /// <summary>Register a new user account. Restricted to Administrators.</summary>
     [HttpPost("register")]
-    [Authorize(Roles = "Administrator")]
+    [Authorize(Roles = "Administrator")] //we can create a new user only if we are an administrator (if we deleted it any one can register) but we will leave it like that beacuse we seeded admins (consider it the super admin at first he can create the first admin from the site)
     [ProducesResponseType(typeof(AuthResponseDto), StatusCodes.Status201Created)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status401Unauthorized)]
