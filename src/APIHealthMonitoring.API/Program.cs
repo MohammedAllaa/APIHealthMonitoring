@@ -78,10 +78,10 @@ namespace APIHealthMonitoring
                     var securityScheme = new OpenApiSecurityScheme
                     {
                         Name         = "Authorization",
-                        Description  = "Enter: Bearer {your JWT token}",
+                        Description  = "Enter your JWT token (without the 'Bearer ' prefix)",
                         In           = ParameterLocation.Header,
-                        Type         = SecuritySchemeType.ApiKey,
-                        Scheme       = "Bearer",
+                        Type         = SecuritySchemeType.Http,
+                        Scheme       = "bearer",
                         BearerFormat = "JWT",
                         Reference = new OpenApiReference
                         {
