@@ -1,4 +1,5 @@
 using APIHealthMonitoring.Application.Interfaces.Alerts;
+using APIHealthMonitoring.Application.Interfaces.Notifications;
 using APIHealthMonitoring.Domain.Entities;
 using APIHealthMonitoring.Domain.Enums;
 
@@ -18,11 +19,18 @@ namespace APIHealthMonitoring.Infrastructure.Alerts.Services;
 /// </summary>
 public class AlertEvaluator : IAlertEvaluator
 {
-    private readonly IAlertService _alertService;
+    private readonly IAlertService              _alertService;
+    private readonly IEmailNotificationService  _emailNotificationService;
 
-    public AlertEvaluator(IAlertService alertService)
+    /// <summary>
+    /// Initialises a new <see cref="AlertEvaluator"/> with alert and email notification services.
+    /// </summary>
+    public AlertEvaluator(
+        IAlertService             alertService,
+        IEmailNotificationService emailNotificationService)
     {
-        _alertService = alertService;
+        _alertService             = alertService;
+        _emailNotificationService = emailNotificationService;
     }
 
     /// <inheritdoc />
@@ -37,10 +45,11 @@ public class AlertEvaluator : IAlertEvaluator
         int criticalMs   = config?.CriticalThresholdMs   ?? 2000;
         int failureLimit = config?.FailureCountLimit      ?? 3;
 
-        // ---- Case 1: API is now Healthy — auto-resolve all open alerts ----
+        // ---- Case 1: API is now Healthy — auto-resolve all open alerts + reset email state ----
         if (endpoint.CurrentStatus == ApiHealthStatus.Healthy)
         {
             await _alertService.AutoResolveForEndpointAsync(endpoint.Id, ct);
+            _emailNotificationService.ResetNotificationState(endpoint.Id);
             return;
         }
 
@@ -52,6 +61,7 @@ public class AlertEvaluator : IAlertEvaluator
                 AlertSeverity.Critical,
                 $"API '{endpoint.Name}' is unreachable: {result.ErrorMessage ?? "no response"}",
                 ct);
+            await _emailNotificationService.NotifyIfCriticalAsync(endpoint, result, ct);
             return;
         }
 
@@ -63,6 +73,7 @@ public class AlertEvaluator : IAlertEvaluator
                 AlertSeverity.Critical,
                 $"API '{endpoint.Name}' has failed {endpoint.ConsecutiveFailures} consecutive times.",
                 ct);
+            await _emailNotificationService.NotifyIfCriticalAsync(endpoint, result, ct);
             return;
         }
 
@@ -85,6 +96,7 @@ public class AlertEvaluator : IAlertEvaluator
                 AlertSeverity.Critical,
                 $"API '{endpoint.Name}' response time is critical: {result.ResponseTimeMs}ms (threshold: {criticalMs}ms).",
                 ct);
+            await _emailNotificationService.NotifyIfCriticalAsync(endpoint, result, ct);
             return;
         }
 

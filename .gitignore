@@ -483,3 +483,6 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 /SRC/APIHealthMonitoring.API/APIHealthMonitoring.API.csproj
+
+# Local development secrets
+src/**/appsettings.Development.json
