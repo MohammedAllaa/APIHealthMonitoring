@@ -81,7 +81,7 @@ namespace APIHealthMonitoring
                         }
                     };
 
-                    options.AddSecurityDefinition("", securityScheme);
+                    options.AddSecurityDefinition("Bearer", securityScheme);
                     options.AddSecurityRequirement(new OpenApiSecurityRequirement
                     {
                         { securityScheme, Array.Empty<string>() }
