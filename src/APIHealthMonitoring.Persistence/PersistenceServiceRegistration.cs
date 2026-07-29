@@ -43,7 +43,7 @@ public static class PersistenceServiceRegistration
             _ = bool.TryParse(configuration["DatabaseSettings:UseRemoteDatabase"], out var useRemote);
             var connectionString = useRemote
                 ? configuration.GetConnectionString("RemoteConnection")
-                : configuration.GetConnectionString("LocalConnection");
+                : configuration.GetConnectionString("DefaultConnection");
 
             options.UseSqlServer(
                 connectionString,
