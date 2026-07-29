@@ -33,8 +33,17 @@ namespace APIHealthMonitoring
                 // Service Registration
                 // -------------------------------------------------------------------------
 
+                // Select connection string based on environment:
+                //   Development → DefaultConnection (local SQL Server)
+                //   All other environments (Production, Staging…) → RemoteConnection (MonsterASP)
+                var connectionStringName = builder.Environment.IsDevelopment()
+                    ? "DefaultConnection"
+                    : "RemoteConnection";
+                var connectionString = builder.Configuration.GetConnectionString(connectionStringName)
+                    ?? throw new InvalidOperationException($"Connection string '{connectionStringName}' is not configured.");
+
                 // Registers AppDbContext (SQL Server, IdentityDbContext) and IUnitOfWork.
-                builder.Services.AddPersistenceServices(builder.Configuration);
+                builder.Services.AddPersistenceServices(connectionString);
 
                 // Registers ASP.NET Core Identity, JWT Bearer authentication,
                 // and all auth/user-management services.

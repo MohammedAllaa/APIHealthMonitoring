@@ -22,9 +22,9 @@ public static class PersistenceServiceRegistration
     /// Includes the EF Core DbContext, Unit of Work, and connection string configuration.
     /// </summary>
     /// <param name="services">The application's service collection.</param>
-    /// <param name="configuration">
-    /// The application configuration, used to read the connection string
-    /// from appsettings.json.
+    /// <param name="connectionString">
+    /// The resolved SQL Server connection string, selected by the caller (Program.cs)
+    /// based on the current hosting environment.
     /// </param>
     /// <returns>
     /// The same <see cref="IServiceCollection"/> instance to support
@@ -32,7 +32,7 @@ public static class PersistenceServiceRegistration
     /// </returns>
     public static IServiceCollection AddPersistenceServices(
         this IServiceCollection services,
-        IConfiguration configuration)
+        string connectionString)
     {
         // -------------------------------------------------------------------------
         // Database Context
@@ -40,12 +40,6 @@ public static class PersistenceServiceRegistration
 
         services.AddDbContext<AppDbContext>(options =>
         {
-            var env = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT");
-            var connectionStringName = (env == "Development" || string.IsNullOrEmpty(env))
-                ? "DefaultConnection"
-                : "RemoteConnection";
-            var connectionString = configuration.GetConnectionString(connectionStringName);
-
             options.UseSqlServer(
                 connectionString,
                 sqlServerOptions =>
