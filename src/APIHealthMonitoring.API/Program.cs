@@ -69,7 +69,7 @@ namespace APIHealthMonitoring
                     var securityScheme = new OpenApiSecurityScheme
                     {
                         Name         = "Authorization",
-                        Description  = "Enter:  {your JWT token}",
+                        Description  = "Enter: Bearer {your JWT token}",
                         In           = ParameterLocation.Header,
                         Type         = SecuritySchemeType.ApiKey,
                         Scheme       = "Bearer",
@@ -81,7 +81,7 @@ namespace APIHealthMonitoring
                         }
                     };
 
-                    options.AddSecurityDefinition("", securityScheme);
+                    options.AddSecurityDefinition("Bearer", securityScheme);
                     options.AddSecurityRequirement(new OpenApiSecurityRequirement
                     {
                         { securityScheme, Array.Empty<string>() }
@@ -104,7 +104,7 @@ namespace APIHealthMonitoring
                 // Must be placed to catch all downstream pipeline exceptions
                 app.UseExceptionHandler();
 
-                if (app.Environment.IsDevelopment() || app.Environment.IsProduction() )
+                if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
                 {
                     app.UseSwagger();
                     app.UseSwaggerUI();
