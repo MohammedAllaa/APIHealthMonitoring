@@ -1,3 +1,4 @@
+using APIHealthMonitoring.API.Middleware;
 using APIHealthMonitoring.Infrastructure;
 using APIHealthMonitoring.Infrastructure.HealthChecks.BackgroundServices;
 using APIHealthMonitoring.Persistence;
@@ -28,6 +29,10 @@ namespace APIHealthMonitoring
 
             // Module 4 — Background monitoring engine
             builder.Services.AddHostedService<MonitoringBackgroundService>();
+
+            // Module 9 — Global exception handling (RFC 7807 ProblemDetails)
+            builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+            builder.Services.AddProblemDetails();
 
             builder.Services.AddControllers();
 
@@ -79,6 +84,9 @@ namespace APIHealthMonitoring
             // Database Seeding — roles + default admin (idempotent)
             // -------------------------------------------------------------------------
             await DatabaseSeeder.SeedAsync(app.Services);
+
+            // Must be the FIRST middleware so all downstream exceptions are caught.
+            app.UseExceptionHandler();
 
             if (app.Environment.IsDevelopment())
             {
