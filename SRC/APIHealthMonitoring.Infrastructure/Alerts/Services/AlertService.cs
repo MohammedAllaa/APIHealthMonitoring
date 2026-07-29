@@ -1,3 +1,4 @@
+using APIHealthMonitoring.Application.Constants;
 using APIHealthMonitoring.Application.DTOs.Alerts;
 using APIHealthMonitoring.Application.Interfaces;
 using APIHealthMonitoring.Application.Interfaces.Alerts;
@@ -14,10 +15,12 @@ namespace APIHealthMonitoring.Infrastructure.Alerts.Services;
 public class AlertService : IAlertService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly ICacheService _cache;
 
-    public AlertService(IUnitOfWork unitOfWork)
+    public AlertService(IUnitOfWork unitOfWork, ICacheService cache)
     {
         _unitOfWork = unitOfWork;
+        _cache      = cache;
     }
 
     // -------------------------------------------------------------------------
@@ -48,6 +51,9 @@ public class AlertService : IAlertService
 
         _unitOfWork.Repository<Alert>().Add(alert);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        // Module 10 — alert count changed; invalidate summary
+        _cache.Remove(CacheKeys.DashboardSummary);
     }
 
     // -------------------------------------------------------------------------
@@ -71,6 +77,9 @@ public class AlertService : IAlertService
         }
 
         await _unitOfWork.SaveChangesAsync(ct);
+
+        // Module 10 — alert count changed; invalidate summary
+        _cache.Remove(CacheKeys.DashboardSummary);
     }
 
     // -------------------------------------------------------------------------
@@ -97,6 +106,9 @@ public class AlertService : IAlertService
 
         _unitOfWork.Repository<Alert>().Update(alert);
         await _unitOfWork.SaveChangesAsync(ct);
+
+        // Module 10 — alert resolved; invalidate summary
+        _cache.Remove(CacheKeys.DashboardSummary);
 
         // Load endpoint name for the response
         var endpoint = await _unitOfWork.Repository<ApiEndpoint>().GetByIdAsync(alert.ApiEndpointId, ct);

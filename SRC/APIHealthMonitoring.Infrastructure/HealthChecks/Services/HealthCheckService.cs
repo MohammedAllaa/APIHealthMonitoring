@@ -1,3 +1,4 @@
+using APIHealthMonitoring.Application.Constants;
 using APIHealthMonitoring.Application.DTOs.HealthChecks;
 using APIHealthMonitoring.Application.Interfaces;
 using APIHealthMonitoring.Application.Interfaces.Alerts;
@@ -19,6 +20,7 @@ public class HealthCheckService : IHealthCheckService
     private readonly IHealthCheckExecutor    _executor;
     private readonly IHealthStatusEvaluator  _evaluator;
     private readonly IAlertEvaluator         _alertEvaluator;
+    private readonly ICacheService           _cache;
 
     // Rate-limit: last manual trigger time per API endpoint
     private static readonly Dictionary<int, DateTime> _lastManualTrigger = new();
@@ -28,12 +30,14 @@ public class HealthCheckService : IHealthCheckService
         IUnitOfWork            unitOfWork,
         IHealthCheckExecutor   executor,
         IHealthStatusEvaluator evaluator,
-        IAlertEvaluator        alertEvaluator)
+        IAlertEvaluator        alertEvaluator,
+        ICacheService          cache)
     {
         _unitOfWork      = unitOfWork;
         _executor        = executor;
         _evaluator       = evaluator;
         _alertEvaluator  = alertEvaluator;
+        _cache           = cache;
     }
 
     // -------------------------------------------------------------------------
@@ -74,6 +78,11 @@ public class HealthCheckService : IHealthCheckService
 
         // 6. Trigger alert evaluation (Module 5)
         await _alertEvaluator.EvaluateAndAlertAsync(endpoint, result, config, ct);
+
+        // 7. Module 10 — Invalidate cached dashboard data that reflects this endpoint
+        _cache.Remove(CacheKeys.DashboardSummary);
+        _cache.RemoveByPrefix(CacheKeys.DashboardApiCards);
+        _cache.RemoveByPrefix($"{CacheKeys.ApiStatsPrefix}{result.ApiEndpointId}");
     }
 
     // -------------------------------------------------------------------------
