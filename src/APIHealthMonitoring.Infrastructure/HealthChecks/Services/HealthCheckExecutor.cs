@@ -42,6 +42,7 @@ public class HealthCheckExecutor : IHealthCheckExecutor
 
             using var request = new HttpRequestMessage(
                 MapHttpMethod(endpoint.HttpMethod), healthUrl);
+            request.Headers.Add("User-Agent", "APIHealthMonitoring/1.0");
 
             using var response = await client.SendAsync(
                 request, HttpCompletionOption.ResponseContentRead, ct);
@@ -99,8 +100,8 @@ public class HealthCheckExecutor : IHealthCheckExecutor
             stopwatch.Stop();
             result.ResponseTimeMs = (int)stopwatch.ElapsedMilliseconds;
             result.IsSuccessful   = false;
-            result.ErrorMessage   = "Network unreachable";
-            _logger.LogWarning("Network error for endpoint '{Name}': {Msg}", endpoint.Name, ex.Message);
+            result.ErrorMessage   = $"Network error: {ex.Message}";
+            _logger.LogWarning(ex, "Network error for endpoint '{Name}': {Msg}", endpoint.Name, ex.Message);
         }
         catch (Exception ex)
         {
