@@ -5,6 +5,7 @@ using APIHealthMonitoring.Application.Interfaces.Auth;
 using APIHealthMonitoring.Application.Interfaces.Dashboard;
 using APIHealthMonitoring.Application.Interfaces.Endpoints;
 using APIHealthMonitoring.Application.Interfaces.HealthChecks;
+using APIHealthMonitoring.Application.Interfaces.Notifications;
 using APIHealthMonitoring.Application.Interfaces.Reporting;
 using APIHealthMonitoring.Application.Settings;
 using APIHealthMonitoring.Infrastructure.Alerts.Services;
@@ -12,6 +13,7 @@ using APIHealthMonitoring.Infrastructure.Caching;
 using APIHealthMonitoring.Infrastructure.Dashboard.Services;
 using APIHealthMonitoring.Infrastructure.Endpoints.Services;
 using APIHealthMonitoring.Infrastructure.HealthChecks.Services;
+using APIHealthMonitoring.Infrastructure.Notifications.Services;
 using APIHealthMonitoring.Infrastructure.Reporting.Services;
 using APIHealthMonitoring.Domain.Entities;
 using APIHealthMonitoring.Infrastructure.Identity.Services;
@@ -56,6 +58,13 @@ public static class IdentityServiceRegistration
 
         services.Configure<CacheSettings>(
             configuration.GetSection(CacheSettings.SectionName));
+
+        // -------------------------------------------------------------------------
+        // Module 12 — Email Notification Settings
+        // -------------------------------------------------------------------------
+
+        services.Configure<EmailSettings>(
+            configuration.GetSection(EmailSettings.SectionName));
 
         var cacheSettings = configuration
             .GetSection(CacheSettings.SectionName)
@@ -152,6 +161,11 @@ public static class IdentityServiceRegistration
         // Module 5 — Alert Management
         services.AddScoped<IAlertService,   AlertService>();
         services.AddScoped<IAlertEvaluator, AlertEvaluator>();
+
+        // Module 12 — Email Notification
+        services.AddSingleton<IEmailNotificationStateTracker, EmailNotificationStateTracker>();
+        services.AddScoped<IEmailSender,               EmailSender>();
+        services.AddScoped<IEmailNotificationService,  EmailNotificationService>();
 
         // Module 6 — Dashboard & Reporting
         services.AddScoped<IAvailabilityCalculator, AvailabilityCalculator>();
