@@ -1,10 +1,8 @@
-using APIHealthMonitoring.API.Middleware;
 using APIHealthMonitoring.Infrastructure;
 using APIHealthMonitoring.Infrastructure.HealthChecks.BackgroundServices;
 using APIHealthMonitoring.Persistence;
 using APIHealthMonitoring.Persistence.Data;
 using Microsoft.OpenApi.Models;
-using Serilog;
 
 namespace APIHealthMonitoring
 {
@@ -12,131 +10,91 @@ namespace APIHealthMonitoring
     {
         public static async Task Main(string[] args)
         {
-            // Bootstrap logger for early startup logging before DI container is built
-            Log.Logger = new LoggerConfiguration()
-                .WriteTo.Console()
-                .CreateBootstrapLogger();
+            var builder = WebApplication.CreateBuilder(args);
 
-            try
+            // -------------------------------------------------------------------------
+            // Service Registration
+            // -------------------------------------------------------------------------
+
+            // Registers AppDbContext (SQL Server, IdentityDbContext) and IUnitOfWork.
+            builder.Services.AddPersistenceServices(builder.Configuration);
+
+            // Registers ASP.NET Core Identity, JWT Bearer authentication,
+            // and all auth/user-management services.
+            builder.Services.AddIdentityServices(builder.Configuration);
+
+            // IHttpClientFactory — used by HealthCheckExecutor to issue HTTP probes
+            builder.Services.AddHttpClient();
+
+            // Module 4 — Background monitoring engine
+            builder.Services.AddHostedService<MonitoringBackgroundService>();
+
+            builder.Services.AddControllers();
+
+            // -------------------------------------------------------------------------
+            // Swagger / OpenAPI — with JWT Bearer security definition
+            // -------------------------------------------------------------------------
+
+            builder.Services.AddEndpointsApiExplorer();
+            builder.Services.AddSwaggerGen(options =>
             {
-                Log.Information("Starting API Health Monitoring Host...");
-
-                var builder = WebApplication.CreateBuilder(args);
-
-                // Module 11 — Serilog Integration
-                builder.Host.UseSerilog((ctx, services, cfg) => cfg
-                    .ReadFrom.Configuration(ctx.Configuration)
-                    .ReadFrom.Services(services)
-                    .Enrich.FromLogContext());
-
-                // -------------------------------------------------------------------------
-                // Service Registration
-                // -------------------------------------------------------------------------
-
-                // Select connection string based on environment:
-                //   Development → DefaultConnection (local SQL Server)
-                //   All other environments (Production, Staging…) → RemoteConnection (MonsterASP)
-                var connectionStringName = builder.Environment.IsDevelopment()
-                    ? "DefaultConnection"
-                    : "RemoteConnection";
-                var connectionString = builder.Configuration.GetConnectionString(connectionStringName)
-                    ?? throw new InvalidOperationException($"Connection string '{connectionStringName}' is not configured.");
-
-                // Registers AppDbContext (SQL Server, IdentityDbContext) and IUnitOfWork.
-                builder.Services.AddPersistenceServices(connectionString);
-
-                // Registers ASP.NET Core Identity, JWT Bearer authentication,
-                // and all auth/user-management services.
-                builder.Services.AddIdentityServices(builder.Configuration);
-
-                // IHttpClientFactory — used by HealthCheckExecutor to issue HTTP probes
-                builder.Services.AddHttpClient();
-
-                // Module 4 — Background monitoring engine
-                builder.Services.AddHostedService<MonitoringBackgroundService>();
-
-                // Module 9 — Global exception handling (RFC 7807 ProblemDetails)
-                builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-                builder.Services.AddProblemDetails();
-
-                builder.Services.AddControllers();
-
-                // -------------------------------------------------------------------------
-                // Swagger / OpenAPI — with JWT Bearer security definition
-                // -------------------------------------------------------------------------
-
-                builder.Services.AddEndpointsApiExplorer();
-                builder.Services.AddSwaggerGen(options =>
+                options.SwaggerDoc("v1", new OpenApiInfo
                 {
-                    options.SwaggerDoc("v1", new OpenApiInfo
-                    {
-                        Title   = "API Health Monitoring",
-                        Version = "v1",
-                        Description = "API Health Monitoring System — Security & Identity Module"
-                    });
-
-                    var securityScheme = new OpenApiSecurityScheme
-                    {
-                        Name         = "Authorization",
-                        Description  = "Enter your JWT token (without the 'Bearer ' prefix)",
-                        In           = ParameterLocation.Header,
-                        Type         = SecuritySchemeType.Http,
-                        Scheme       = "bearer",
-                        BearerFormat = "JWT",
-                        Reference = new OpenApiReference
-                        {
-                            Id   = "Bearer",
-                            Type = ReferenceType.SecurityScheme,
-                        }
-                    };
-
-                    options.AddSecurityDefinition("Bearer", securityScheme);
-                    options.AddSecurityRequirement(new OpenApiSecurityRequirement
-                    {
-                        { securityScheme, Array.Empty<string>() }
-                    });
+                    Title   = "API Health Monitoring",
+                    Version = "v1",
+                    Description = "API Health Monitoring System — Security & Identity Module"
                 });
 
-                // -------------------------------------------------------------------------
-                // HTTP Pipeline Configuration
-                // -------------------------------------------------------------------------
-
-                var app = builder.Build();
-
-                // Database Seeding — roles + default admin (idempotent)
-                await DatabaseSeeder.SeedAsync(app.Services);
-
-                // Module 11 — Correlation ID & Request Logging
-                app.UseMiddleware<CorrelationIdMiddleware>();
-                app.UseSerilogRequestLogging();
-
-                // Must be placed to catch all downstream pipeline exceptions
-                app.UseExceptionHandler();
-
-                if (app.Environment.IsDevelopment() || app.Environment.IsProduction())
+                // Add the JWT Bearer security scheme so Swagger UI includes an
+                // "Authorize" button for sending tokens with requests.
+                var securityScheme = new OpenApiSecurityScheme
                 {
-                    app.UseSwagger();
-                    app.UseSwaggerUI();
-                }
+                    Name         = "Authorization",
+                    Description  = "Enter: Bearer {your JWT token}",
+                    In           = ParameterLocation.Header,
+                    Type         = SecuritySchemeType.ApiKey,
+                    Scheme       = "Bearer",
+                    BearerFormat = "JWT",
+                    Reference = new OpenApiReference
+                    {
+                        Id   = "Bearer",
+                        Type = ReferenceType.SecurityScheme,
+                    }
+                };
 
-                app.UseHttpsRedirection();
+                options.AddSecurityDefinition("Bearer", securityScheme);
+                options.AddSecurityRequirement(new OpenApiSecurityRequirement
+                {
+                    { securityScheme, Array.Empty<string>() }
+                });
+            });
 
-                // Authentication MUST come before Authorization
-                app.UseAuthentication();
-                app.UseAuthorization();
+            // -------------------------------------------------------------------------
+            // HTTP Pipeline Configuration
+            // -------------------------------------------------------------------------
 
-                app.MapControllers();
+            var app = builder.Build();
 
-                await app.RunAsync();
-            }
-            catch (Exception ex)
+            // -------------------------------------------------------------------------
+            // Database Seeding — roles + default admin (idempotent)
+            // -------------------------------------------------------------------------
+            await DatabaseSeeder.SeedAsync(app.Services);
+
+            if (app.Environment.IsDevelopment())
             {
-                Log.Fatal(ex, "API Health Monitoring Host terminated unexpectedly.");
+                app.UseSwagger();
+                app.UseSwaggerUI();
             }
-            finally
-            {
-                Log.CloseAndFlush();
-            }
+
+            app.UseHttpsRedirection();
+
+            // Authentication MUST come before Authorization
+            app.UseAuthentication();
+            app.UseAuthorization();
+
+            app.MapControllers();
+
+            app.Run();
         }
     }
 }
