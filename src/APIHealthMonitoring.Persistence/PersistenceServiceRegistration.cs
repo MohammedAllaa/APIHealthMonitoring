@@ -32,7 +32,7 @@ public static class PersistenceServiceRegistration
     /// </returns>
     public static IServiceCollection AddPersistenceServices(
         this IServiceCollection services,
-        IConfiguration configuration)
+        string connectionString)
     {
         // -------------------------------------------------------------------------
         // Database Context
@@ -41,7 +41,7 @@ public static class PersistenceServiceRegistration
         services.AddDbContext<AppDbContext>(options =>
         {
             options.UseSqlServer(
-                configuration.GetConnectionString("DefaultConnection"),
+                connectionString,
                 sqlServerOptions =>
                 {
                     // Tells EF Core which assembly contains the migration files.
