@@ -89,11 +89,9 @@ namespace APIHealthMonitoring
             // -------------------------------------------------------------------------
             await DatabaseSeeder.SeedAsync(app.Services);
 
-            if (app.Environment.IsDevelopment())
-            {
-                app.UseSwagger();
-                app.UseSwaggerUI();
-            }
+            // Enable Swagger in all environments (including production)
+            app.UseSwagger();
+            app.UseSwaggerUI();
 
             app.UseHttpsRedirection();
 
