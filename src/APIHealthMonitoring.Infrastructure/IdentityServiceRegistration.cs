@@ -14,6 +14,7 @@ using APIHealthMonitoring.Application.Interfaces.Notifications;
 using APIHealthMonitoring.Infrastructure.Notifications.Services;
 using APIHealthMonitoring.Infrastructure.Notifications.Settings;
 using APIHealthMonitoring.Domain.Entities;
+using APIHealthMonitoring.Application.Settings;
 using APIHealthMonitoring.Infrastructure.Identity.Services;
 using APIHealthMonitoring.Infrastructure.Identity.Settings;
 using APIHealthMonitoring.Persistence.Data;
@@ -136,6 +137,11 @@ public static class IdentityServiceRegistration
         // Module 5 — Alert Management & Notifications
         services.Configure<SlackSettings>(configuration.GetSection(SlackSettings.SectionName));
         services.AddTransient<ISlackNotificationService, SlackNotificationService>();
+
+        services.Configure<EmailSettings>(configuration.GetSection(EmailSettings.SectionName));
+        services.AddSingleton<IEmailNotificationStateTracker, EmailNotificationStateTracker>();
+        services.AddScoped<IEmailSender, EmailSender>();
+        services.AddScoped<IEmailNotificationService, EmailNotificationService>();
 
         services.AddScoped<IAlertService, AlertService>();
         services.AddScoped<IAlertEvaluator, AlertEvaluator>();

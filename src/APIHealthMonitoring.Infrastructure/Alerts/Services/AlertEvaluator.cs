@@ -22,15 +22,18 @@ namespace APIHealthMonitoring.Infrastructure.Alerts.Services;
 /// </summary>
 public class AlertEvaluator : IAlertEvaluator
 {
-    private readonly IAlertService             _alertService;
-    private readonly ISlackNotificationService _slack;
+    private readonly IAlertService              _alertService;
+    private readonly ISlackNotificationService  _slack;
+    private readonly IEmailNotificationService  _emailNotificationService;
 
     public AlertEvaluator(
         IAlertService             alertService,
-        ISlackNotificationService slack)
+        ISlackNotificationService slack,
+        IEmailNotificationService emailNotificationService)
     {
-        _alertService = alertService;
-        _slack        = slack;
+        _alertService             = alertService;
+        _slack                    = slack;
+        _emailNotificationService = emailNotificationService;
     }
 
     /// <inheritdoc />
@@ -49,6 +52,7 @@ public class AlertEvaluator : IAlertEvaluator
         if (endpoint.CurrentStatus == ApiHealthStatus.Healthy)
         {
             await _alertService.AutoResolveForEndpointAsync(endpoint.Id, ct);
+            _emailNotificationService.ResetNotificationState(endpoint.Id);
             await _slack.SendAlertNotificationAsync(
                 endpoint.Name,
                 AlertSeverity.Warning,   // severity is ignored when isResolved = true
@@ -66,6 +70,7 @@ public class AlertEvaluator : IAlertEvaluator
                 endpoint.Id, AlertSeverity.Critical, msg, ct);
             await _slack.SendAlertNotificationAsync(
                 endpoint.Name, AlertSeverity.Critical, msg, isResolved: false, ct);
+            await _emailNotificationService.NotifyIfCriticalAsync(endpoint, result, ct);
             return;
         }
 
@@ -77,6 +82,7 @@ public class AlertEvaluator : IAlertEvaluator
                 endpoint.Id, AlertSeverity.Critical, msg, ct);
             await _slack.SendAlertNotificationAsync(
                 endpoint.Name, AlertSeverity.Critical, msg, isResolved: false, ct);
+            await _emailNotificationService.NotifyIfCriticalAsync(endpoint, result, ct);
             return;
         }
 
@@ -99,6 +105,7 @@ public class AlertEvaluator : IAlertEvaluator
                 endpoint.Id, AlertSeverity.Critical, msg, ct);
             await _slack.SendAlertNotificationAsync(
                 endpoint.Name, AlertSeverity.Critical, msg, isResolved: false, ct);
+            await _emailNotificationService.NotifyIfCriticalAsync(endpoint, result, ct);
             return;
         }
 
