@@ -14,7 +14,6 @@ An Enterprise-grade **API Health Monitoring & Analytics Platform** built with **
 - [API Endpoints Reference](#api-endpoints-reference)
 - [Security & Authentication (RBAC)](#security--authentication-rbac)
 - [Background Monitoring Engine](#background-monitoring-engine)
-- [Getting Started & Local Setup](#getting-started--local-setup)
 - [Default Seed Credentials](#default-seed-credentials)
 
 ---
@@ -114,11 +113,11 @@ The solution follows **Clean Architecture** (Onion Architecture) with strict lay
 
 ## 🛠️ Tech Stack
 
-- **Framework**: .NET 8 / .NET 9 C#
-- **ORM**: Entity Framework Core 8.x
+- **Framework**: .NET 8 
+- **ORM**: Entity Framework Core 
 - **Database**: Microsoft SQL Server
-- **Identity & Security**: ASP.NET Core Identity + JWT Bearer Tokens
-- **Documentation**: Swagger / OpenAPI with Bearer Auth support
+- **Identity & Security**: ASP.NET Core Identity + JWT 
+- **Documentation**: Swagger 
 - **Background Execution**: `IHostedService` (`BackgroundService`)
 - **HTTP Client**: `IHttpClientFactory`
 
@@ -265,30 +264,6 @@ The `MonitoringBackgroundService` operates in a background loop:
 
 ---
 
-## ⚙️ Getting Started & Local Setup
-
-### Prerequisites
-- [.NET 8.0 SDK or .NET 9.0 SDK](https://dotnet.microsoft.com/download)
-- [SQL Server](https://www.microsoft.com/en-us/sql-server/sql-server-downloads) (LocalDB, Express, or Full instance)
-- Visual Studio 2022 / VS Code / JetBrains Rider
-
-### Configuration (`appsettings.json`)
-Ensure your SQL Server connection string in `SRC/APIHealthMonitoring.API/appsettings.json` points to a valid server:
-
-```json
-{
-  "ConnectionStrings": {
-    "DefaultConnection": "Server=.;Database=APIHealthMonitoringDb;Trusted_Connection=True;TrustServerCertificate=True;"
-  },
-  "JwtSettings": {
-    "Secret": "YourSuperSecretKeyThatIsAtLeast32CharactersLong!",
-    "Issuer": "APIHealthMonitoring",
-    "Audience": "APIHealthMonitoringClients",
-    "ExpiryMinutes": 60,
-    "RefreshTokenExpiryDays": 7
-  }
-}
-```
 
 ### Running the Database Migration & Seeder
 The database will automatically run migrations and populate seed data (roles, users, endpoints, 30-day historical health check logs, sample alerts) on initial startup!
@@ -326,4 +301,4 @@ Upon initial database seeding, the following default accounts are created:
 
 ## 📄 License & Attribution
 
-Developed for **Elswedy Internship Project** — Enterprise API Health Monitoring Platform.
+Developed for **Elswedy Internship Project** —  API Health Monitoring Platform.
