@@ -1,4 +1,5 @@
 using APIHealthMonitoring.Application.Interfaces.Alerts;
+using APIHealthMonitoring.Application.Interfaces.Notifications;
 using APIHealthMonitoring.Domain.Enums;
 using APIHealthMonitoring.Infrastructure.Alerts.Services;
 using APIHealthMonitoring.UnitTests.Common.Builders;
@@ -9,12 +10,19 @@ namespace APIHealthMonitoring.UnitTests.Services;
 public class AlertEvaluatorTests
 {
     private readonly Mock<IAlertService> _alertServiceMock;
+    private readonly Mock<ISlackNotificationService> _slackServiceMock;
+    private readonly Mock<IEmailNotificationService> _emailServiceMock;
     private readonly AlertEvaluator _sut;
 
     public AlertEvaluatorTests()
     {
         _alertServiceMock = new Mock<IAlertService>();
-        _sut = new AlertEvaluator(_alertServiceMock.Object);
+        _slackServiceMock = new Mock<ISlackNotificationService>();
+        _emailServiceMock = new Mock<IEmailNotificationService>();
+        _sut = new AlertEvaluator(
+            _alertServiceMock.Object,
+            _slackServiceMock.Object,
+            _emailServiceMock.Object);
     }
 
     [Fact]
